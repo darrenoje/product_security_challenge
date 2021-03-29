@@ -16,10 +16,12 @@ class users(db.Model):
     _id = db.Column("id", db.Integer, primary_key=True) 
     name = db.Column(db.String(100))
     password = db.Column(db.String(100))
+    attempts = db.Column(db.Integer)
 
-    def __init__(self, name, password):
+    def __init__(self, name, password, attempts):
         self.name = name
         self.password = password
+        self.attempts = attempts
 
 
 def sanitiseInput(input):
@@ -33,6 +35,7 @@ def allowedPassword(input):
     else:
         return False
 
+
 @app.route("/create-acc", methods=["POST", "GET"])
 def create_acc():
     if request.method == "POST":
@@ -42,7 +45,7 @@ def create_acc():
         if legal_password:
             password = request.form["pw"]
             hashed_password = bcrypt.hashpw(password.encode(), salt)
-            new_user = users(user, hashed_password)
+            new_user = users(user, hashed_password, 0)
             db.session.add(new_user)
             db.session.commit()
             flash("Your account is successfully created!", "info")
@@ -60,9 +63,14 @@ def home():
         password = sanitiseInput(request.form["pw"])
         registered_user = users.query.filter_by(name=user).first()
         if registered_user:
+            if registered_user.attempts >= 5:
+                flash("Your account has been locked out due to multiple failures of login.")
+                return render_template("index.html")
             if bcrypt.checkpw(password.encode(), registered_user.password):    
                 return redirect(url_for("user"))    
             else:
+                registered_user.attempts += 1
+                db.session.commit()
                 flash("Username or password is wrong! Kindly check again", "info")
                 return redirect(url_for("home"))
         else:
