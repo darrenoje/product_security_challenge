@@ -1,13 +1,15 @@
 from flask import Flask, redirect, url_for, render_template, request, flash
 from flask_sqlalchemy import SQLAlchemy
 import html, re, bcrypt
+from flask_wtf.csrf import CSRFProtect
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = "secret"
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///users.sqlite3'
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 salt = bcrypt.gensalt()
-
+csrf = CSRFProtect()
+csrf.init_app(app)
 db = SQLAlchemy(app)
 
 class users(db.Model):
