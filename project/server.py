@@ -67,6 +67,8 @@ def home():
                 flash("Your account has been locked out due to multiple failures of login.")
                 return render_template("index.html")
             if bcrypt.checkpw(password.encode(), registered_user.password):    
+                response = redirect(url_for("user"))
+                response.set_cookie
                 return redirect(url_for("user"))    
             else:
                 registered_user.attempts += 1
@@ -87,5 +89,5 @@ def user():
 if __name__ == "__main__":
     db.drop_all()
     db.create_all()
-    app.run(ssl_context=('cert.pem', 'key.pem'), debug=False)
+    app.run(ssl_context=('adhoc'), debug=False)
     
