@@ -34,7 +34,7 @@ def allowedPassword(input):
         return True
     else:
         return False
-
+    
 
 @app.route("/create-acc", methods=["POST", "GET"])
 def create_acc():
@@ -87,5 +87,5 @@ def user():
 if __name__ == "__main__":
     db.drop_all()
     db.create_all()
-    app.run(debug=False)
+    app.run(ssl_context=('cert.pem', 'key.pem'), debug=False)
     
