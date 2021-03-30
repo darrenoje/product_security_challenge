@@ -30,10 +30,16 @@ def sanitiseInput(input):
 
 def allowedPassword(input):
     m = re.compile(r'[a-zA-Z0-9]*$')
-    if(m.match(input)):
+    if m.match(input) and validPasswordLength(input):
         return True
     else:
         return False
+
+def validPasswordLength(input):
+    if len(input) < 8:
+        return False
+    else:
+        return True
     
 
 @app.route("/create-acc", methods=["POST", "GET"])
@@ -51,7 +57,7 @@ def create_acc():
             flash("Your account is successfully created!", "info")
             return redirect(url_for("home")) 
         else:
-            flash("Please ensure that your username contains only alphabets, and your password contains only alphabets and numbers!", "info")
+            flash("Please ensure that your username contains only alphabets, password has at least 8 characters that may consist of alphabets and numbers", "info")
             return render_template("create-acc.html")
     else:
         return render_template("create-acc.html")
