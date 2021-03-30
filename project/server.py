@@ -1,4 +1,4 @@
-from flask import Flask, redirect, url_for, render_template, request, flash
+from flask import Flask, redirect, url_for, render_template, request, flash, make_response
 from flask_sqlalchemy import SQLAlchemy
 import html, re, bcrypt, logging
 from flask_wtf.csrf import CSRFProtect
@@ -99,7 +99,9 @@ def home():
                 if registered_user.attempts > 0:
                     registered_user.attempts = 0
                     db.session.commit()  
-                return redirect(url_for("user"))    
+                res = make_response(redirect(url_for("user")))
+                res.set_cookie('cookie', value=user, max_age=30, httponly=True)
+                return res
             else:
                 registered_user.attempts += 1
                 db.session.commit()
@@ -115,8 +117,14 @@ def home():
 
 @app.route("/user")
 def user():
-    app.logger.info('User logged in successfully')
-    return f"<h1>Welcome!</h1>"
+    name = request.cookies.get('cookie')
+    if name:
+        app.logger.info('User logged in successfully')
+        return f"<h1>Welcome {name}!</h1>"
+    else:
+        flash("Please kindly login again!", "info")
+        app.logger.warning('User cookie expired')
+        return render_template("index.html")
 
 
 if __name__ == "__main__":
