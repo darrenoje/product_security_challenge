@@ -8,7 +8,7 @@ app = Flask(__name__)
 app.config['SECRET_KEY'] = "secret"
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///users.sqlite3'
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
-salt = bcrypt.gensalt()
+salt = bcrypt.gensalt(rounds=16)
 csrf = CSRFProtect()
 csrf.init_app(app)
 db = SQLAlchemy(app)
