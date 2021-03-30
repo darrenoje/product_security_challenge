@@ -2,6 +2,7 @@ from flask import Flask, redirect, url_for, render_template, request, flash
 from flask_sqlalchemy import SQLAlchemy
 import html, re, bcrypt
 from flask_wtf.csrf import CSRFProtect
+import pandas as pd
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = "secret"
@@ -11,6 +12,7 @@ salt = bcrypt.gensalt()
 csrf = CSRFProtect()
 csrf.init_app(app)
 db = SQLAlchemy(app)
+
 
 class users(db.Model):
     _id = db.Column("id", db.Integer, primary_key=True) 
@@ -36,28 +38,38 @@ def allowedPassword(input):
         return False
 
 def validPasswordLength(input):
-    if len(input) < 8:
+    if len(input) < 6:
         return False
     else:
         return True
+
+def commonPassword(input):
+    if input in d.keys():
+        return True
+    else:
+        return False
     
 
 @app.route("/create-acc", methods=["POST", "GET"])
 def create_acc():
     if request.method == "POST":
         user = request.form["nm"]
-        legal_password = allowedPassword(request.form["pw"])
+        password = request.form["pw"]
+        legal_password = allowedPassword(password)
         
         if legal_password:
-            password = request.form["pw"]
-            hashed_password = bcrypt.hashpw(password.encode(), salt)
-            new_user = users(user, hashed_password, 0)
-            db.session.add(new_user)
-            db.session.commit()
-            flash("Your account is successfully created!", "info")
-            return redirect(url_for("home")) 
+            if not commonPassword(password):
+                hashed_password = bcrypt.hashpw(password.encode(), salt)
+                new_user = users(user, hashed_password, 0)
+                db.session.add(new_user)
+                db.session.commit()
+                flash("Your account is successfully created!", "info")
+                return redirect(url_for("home")) 
+            else:
+                flash("Please use a stronger password!", "info")
+                return render_template("create-acc.html")
         else:
-            flash("Please ensure that your username contains only alphabets, password has at least 8 characters that may consist of alphabets and numbers", "info")
+            flash("Please ensure that your username contains only alphabets, password has at least 6 characters that may consist of alphabets and numbers", "info")
             return render_template("create-acc.html")
     else:
         return render_template("create-acc.html")
@@ -95,5 +107,11 @@ def user():
 if __name__ == "__main__":
     db.drop_all()
     db.create_all()
+
+    d = dict()
+    common_passwords = open('10k-most-common-passwords.txt', 'r')
+    for line in open('10k-most-common-passwords.txt', 'r').readlines():
+        d[line.strip()] = 1
+    
     app.run(ssl_context=('adhoc'), debug=False)
     
